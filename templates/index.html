@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TourAI Guide - Weather & Travel Assistant</title>
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@13.0.1/dist/markdown-it.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, rgba(51,65,85,0.88), rgba(30,58,138,0.85)), 
+                        url('https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&h=900&fit=crop') center/cover fixed;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.06);
+            backdrop-filter: blur(12px);
+            padding: 30px 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+        }
+
+        header h1 {
+            font-size: 2.8em;
+            margin-bottom: 5px;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.15em;
+            opacity: 0.95;
+            font-weight: 300;
+            margin-top: 8px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Search Card */
+        .search-card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .search-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        #cityInput {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        #cityInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            color: #667eea;
+            display: none;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        /* Chat loading flag */
+        .chat-loading {
+            display: none;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            margin-top: 10px;
+            justify-content: center;
+        }
+
+        .chat-flag {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            object-fit: cover;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+            animation: flag-spin 1.2s linear infinite;
+        }
+
+        .chat-loading-text {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        @keyframes flag-spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Weather Card */
+        .weather-info {
+            display: none;
+        }
+
+        .weather-info.active {
+            display: block;
+        }
+
+        .weather-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+        }
+
+        .city-name {
+            font-size: 2em;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .weather-temp {
+            font-size: 2.5em;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .weather-description {
+            color: #666;
+            font-size: 1.1em;
+            text-transform: capitalize;
+            margin-top: 10px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .weather-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .weather-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .weather-value {
+            color: #333;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        /* Places Card */
+        .places-container {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .places-container.active {
+            display: block;
+        }
+
+        .places-title {
+            color: #333;
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        .place-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: background 0.3s;
+        }
+
+        .place-item:hover {
+            background: #f0f0f0;
+        }
+
+        .place-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .place-detail {
+            color: #666;
+            font-size: 0.95em;
+            line-height: 1.6;
+            margin-bottom: 5px;
+        }
+
+        .place-detail strong {
+            color: #333;
+        }
+
+        /* Chat Section */
+        .chat-section {
+            grid-column: 1 / -1;
+        }
+
+        .chat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chat-header h2 {
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .clear-btn {
+            padding: 8px 15px;
+            font-size: 0.9em;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+        }
+
+        .clear-btn:hover {
+            background: #e0e0e0;
+        }
+
+        .chat-disabled {
+            display: none;
+        }
+
+        .chat-disabled.active {
+            display: block;
+            color: #999;
+            text-align: center;
+            padding: 30px;
+            background: #f9f9f9;
+            border-radius: 8px;
+        }
+
+        .chat-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            display: none;
+        }
+
+        .chat-container.active {
+            display: grid;
+        }
+
+        .chat-messages {
+            height: 500px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 15px;
+            background: #f9f9f9;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            padding: 14px 18px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            max-width: 90%;
+            animation: slideIn 0.28s cubic-bezier(.2,.8,.2,1);
+            line-height: 1.45;
+            white-space: pre-wrap;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: linear-gradient(180deg,#ffffff,#f3f6fb);
+            color: #111;
+            max-width: 95%;
+            box-shadow: 0 6px 18px rgba(30,40,60,0.06);
+            border: 1px solid rgba(100,120,220,0.06);
+        }
+
+        /* Make lists and markers render inside the bubble and look polished */
+        .message ul,
+        .message ol {
+            margin: 8px 0 8px 0.6em;
+            padding-left: 1.05em;
+            list-style-position: inside;
+        }
+
+        .message li {
+            margin: 6px 0;
+        }
+
+        .message ul li::marker {
+            color: #ffb84d;
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .message ol {
+            counter-reset: item;
+        }
+
+        .message ol li::marker {
+            font-weight: 700;
+            color: #334155;
+        }
+
+        /* Improve code/pre blocks readability inside messages */
+        .message pre {
+            background: rgba(0,0,0,0.03);
+            padding: 10px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        /* Bot avatar and message row */
+        .message-row {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .bot-row { align-self: flex-start; }
+
+        .bot-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 0px;
+            box-shadow: 0 8px 24px rgba(102,126,234,0.35);
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bot-avatar::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 24px;
+            background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.8), rgba(255,255,255,0.3));
+            border-radius: 40% 40% 50% 50%;
+            box-shadow: inset 0 0 0 2px white;
+        }
+
+        .bot-avatar::after {
+            content: '';
+            position: absolute;
+            width: 14px;
+            height: 14px;
+            background: white;
+            border-radius: 50%;
+            bottom: 10px;
+            box-shadow: inset 0 2px 4px rgba(102,126,234,0.5), -6px -6px 0 -2px white;
+        }
+
+        /* List hover / copy affordance */
+        .message li {
+            position: relative;
+            transition: background 0.15s, transform 0.06s;
+        }
+
+        .message li:hover {
+            background: rgba(102,126,234,0.06);
+            transform: translateX(2px);
+            cursor: pointer;
+        }
+
+        .copy-toast {
+            position: fixed;
+            right: 20px;
+            top: 22px;
+            background: rgba(17,24,39,0.95);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            box-shadow: 0 8px 32px rgba(2,6,23,0.35);
+            display: none;
+            z-index: 9999;
+        }
+
+        .chat-input-area {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .chat-suggestions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .suggestion-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            color: #333;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.95em;
+            transition: all 0.3s;
+        }
+
+        .suggestion-btn:hover {
+            background: #e8e8e8;
+            border-color: #667eea;
+        }
+
+        #chatInput {
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            resize: none;
+            height: 60px;
+            font-family: inherit;
+        }
+
+        #chatInput:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-send-btn {
+            padding: 12px 30px;
+        }
+
+        /* Error message */
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .chat-container.active {
+                grid-template-columns: 1fr;
+            }
+
+            header h1 {
+                font-size: 2em;
+            }
+
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .card {
+                padding: 15px;
+            }
+
+            .search-container {
+                flex-direction: column;
+            }
+
+            .chat-messages {
+                height: 300px;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 TourAI Guide</h1>
+            <p>Your Personal Weather-Aware Travel Assistant</p>
+        </header>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="main-content">
+            <!-- Search and Weather Section -->
+            <div class="card">
+                <h2>🔍 Find Your Destination</h2>
+                <div class="search-container">
+                    <input 
+                        type="text" 
+                        id="cityInput" 
+                        placeholder="Enter city name (e.g., Paris, Tokyo, New York)" 
+                        autocomplete="off"
+                    >
+                    <button onclick="searchWeather()">Search</button>
+                </div>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Fetching weather and recommendations...</p>
+                </div>
+
+                <div class="weather-info" id="weatherInfo">
+                    <div class="weather-header">
+                        <div>
+                            <div class="city-name" id="cityName"></div>
+                            <div class="weather-description" id="weatherDesc"></div>
+                        </div>
+                        <div class="weather-temp" id="weatherTemp"></div>
+                    </div>
+
+                    <div class="weather-grid">
+                        <div class="weather-item">
+                            <div class="weather-label">Feels Like</div>
+                            <div class="weather-value" id="feelsLike"></div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-label">Humidity</div>
+                            <div class="weather-value" id="humidity"></div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-label">Wind Speed</div>
+                            <div class="weather-value" id="windSpeed"></div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-label">Pressure</div>
+                            <div class="weather-value" id="pressure"></div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-label">Cloud Coverage</div>
+                            <div class="weather-value" id="clouds"></div>
+                        </div>
+                        <div class="weather-item">
+                            <div class="weather-label">Coordinates</div>
+                            <div class="weather-value" id="coords" style="font-size: 0.9em;"></div>
+                        </div>
+                    </div>
+
+                    <div class="places-container" id="placesContainer">
+                        <div class="places-title">🏖️ Recommended Places to Visit</div>
+                        <div id="placesList"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Info Panel -->
+            <div class="card">
+                <h2>💡 Quick Tips</h2>
+                <div style="color: #666; line-height: 1.8;">
+                    <p style="margin-bottom: 15px;">
+                        <strong>Welcome to TourAI Guide!</strong> This app combines real-time weather data with AI-powered travel recommendations.
+                    </p>
+                    <p style="margin-bottom: 15px;">
+                        <strong>Features:</strong>
+                    </p>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li>🌡️ Real-time weather information</li>
+                        <li>🎯 AI-powered place recommendations</li>
+                        <li>💬 Chat with your AI tour guide</li>
+                        <li>🤖 Get answers about places and weather</li>
+                    </ul>
+                    <p style="margin-bottom: 15px;">
+                        <strong>How to use:</strong>
+                    </p>
+                    <ol style="margin-left: 20px;">
+                        <li>Enter a city name in the search box</li>
+                        <li>View weather and recommended places</li>
+                        <li>Chat with the AI guide for more details</li>
+                        <li>Ask about specific attractions or activities</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="card chat-section">
+            <div class="chat-header">
+                <h2>🤖 Talk to Your AI Tour Guide</h2>
+                <button class="clear-btn" id="clearBtn" onclick="clearChat()" style="display: none;">Clear Chat</button>
+            </div>
+
+            <div class="chat-disabled" id="chatDisabled">
+                <p>Please search for a city first to start chatting with your tour guide!</p>
+            </div>
+
+            <div class="chat-container" id="chatContainer">
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div id="copyToast" class="copy-toast">Copied to clipboard</div>
+                    <div id="chatLoading" class="chat-loading" style="display:none;"> 
+                        <img id="chatFlag" class="chat-flag" src="" alt="flag" />
+                        <div class="chat-loading-text">Preparing your answer...</div>
+                    </div>
+                <div class="chat-input-area">
+                    <div class="chat-suggestions" id="suggestions">
+                        <button class="suggestion-btn" onclick="sendMessage('What are the best restaurants here?')">
+                            🍽️ Best Restaurants?
+                        </button>
+                        <button class="suggestion-btn" onclick="sendMessage('What activities are suitable for this weather?')">
+                            🌤️ Weather-Suitable Activities?
+                        </button>
+                        <button class="suggestion-btn" onclick="sendMessage('What is the best time to visit?')">
+                            ⏰ Best Time to Visit?
+                        </button>
+                        <button class="suggestion-btn" onclick="sendMessage('What are the safety tips for travelers?')">
+                            🛡️ Safety Tips?
+                        </button>
+                        <button class="suggestion-btn" onclick="sendMessage('Tell me about local culture and traditions.')">
+                            🎭 Local Culture?
+                        </button>
+                    </div>
+                    <textarea 
+                        id="chatInput" 
+                        placeholder="Ask me anything about this city or the weather..." 
+                        onkeypress="if(event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendMessage(); }"
+                    ></textarea>
+                    <button class="chat-send-btn" onclick="sendMessage()">Send Message</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiBaseUrl = '/api';
+        let currentCity = null;
+        let currentCountry = null;
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+            setTimeout(() => {
+                errorEl.classList.remove('show');
+            }, 5000);
+        }
+
+        function searchWeather() {
+            const cityInput = document.getElementById('cityInput');
+            const city = cityInput.value.trim();
+
+            if (!city) {
+                showError('Please enter a city name');
+                return;
+            }
+
+            const loading = document.getElementById('loading');
+            loading.style.display = 'block';
+
+            fetch(`${apiBaseUrl}/weather`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ city: city })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Failed to fetch weather');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                    currentCity = city;
+                    displayWeather(data.weather, data.requested_city, data.corrected_city);
+                    displayPlaces(data.places);
+                enableChat();
+                loading.style.display = 'none';
+            })
+            .catch(error => {
+                loading.style.display = 'none';
+                showError('Error: ' + error.message);
+            });
+        }
+
+        // Show a rotating country flag while the AI prepares a response
+        function showChatLoading(countryName) {
+            const container = document.getElementById('chatLoading');
+            const flagImg = document.getElementById('chatFlag');
+            if (!container || !flagImg) return;
+            // Default globe icon while resolving flag
+            flagImg.src = 'https://upload.wikimedia.org/wikipedia/commons/8/83/Globe_icon.svg';
+            container.style.display = 'flex';
+            // Try to resolve country ISO code via restcountries and fetch flag
+            if (countryName) {
+                fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(countryName)}?fullText=true`)
+                .then(r => r.json())
+                .then(data => {
+                    if (Array.isArray(data) && data[0] && data[0].cca2) {
+                        const code = data[0].cca2.toLowerCase();
+                        flagImg.src = `https://flagcdn.com/w80/${code}.png`;
+                    }
+                })
+                .catch(() => {
+                    /* keep default globe */
+                });
+            }
+        }
+
+        function hideChatLoading() {
+            const container = document.getElementById('chatLoading');
+            if (container) container.style.display = 'none';
+        }
+
+        function displayWeather(weather, requestedFromApi = null, correctedFromApi = null) {
+            // Determine display names: user-typed requested name (from API), optionally corrected name, and resolved area from wttr.in
+            const userRequested = requestedFromApi || weather.requested_city || '';
+            const corrected = correctedFromApi || null;
+            const resolved = weather.resolved_city || '';
+
+            let title = userRequested;
+            if (corrected && corrected.toLowerCase() !== userRequested.toLowerCase()) {
+                title = `${userRequested} → ${corrected}`; // show correction arrow
+            }
+            if (resolved && resolved.toLowerCase() !== (corrected || userRequested).toLowerCase()) {
+                title = `${title} (resolved: ${resolved})`;
+            }
+            document.getElementById('cityName').textContent = `${title}, ${weather.country}`;
+            // Store current country for chat loading flag
+            currentCountry = weather.country || null;
+            document.getElementById('weatherTemp').textContent = 
+                `${Math.round(weather.temperature)}°C`;
+            document.getElementById('weatherDesc').textContent = 
+                weather.description;
+            document.getElementById('feelsLike').textContent = 
+                `${Math.round(weather.feels_like)}°C`;
+            document.getElementById('humidity').textContent = 
+                `${weather.humidity}%`;
+            document.getElementById('windSpeed').textContent = 
+                `${Number(weather.wind_speed).toFixed(2)} m/s`;
+            document.getElementById('pressure').textContent = 
+                `${weather.pressure} hPa`;
+            document.getElementById('clouds').textContent = 
+                `${weather.clouds}%`;
+            document.getElementById('coords').textContent = 
+                `${weather.coordinates.lat.toFixed(2)}°, ${weather.coordinates.lon.toFixed(2)}°`;
+
+            document.getElementById('weatherInfo').classList.add('active');
+        }
+
+        function displayPlaces(placesData) {
+            const placesList = document.getElementById('placesList');
+            placesList.innerHTML = '';
+
+            // Normalize: placesData might be an array or an object {places: [...]}
+            let places = [];
+            if (Array.isArray(placesData)) {
+                places = placesData;
+            } else if (placesData && Array.isArray(placesData.places)) {
+                places = placesData.places;
+            } else if (placesData && typeof placesData === 'object' && placesData.places) {
+                places = placesData.places;
+            }
+
+            if (!places || places.length === 0) {
+                placesList.innerHTML = '<p style="color: #999;">No places found</p>';
+            } else {
+                places.slice(0,5).forEach((placeName, index) => {
+                    const name = (typeof placeName === 'string') ? placeName : (placeName.name || placeName.title || String(placeName));
+                    const placeHTML = `
+                        <div class="place-item">
+                            <div class="place-name">${index + 1}. ${name}</div>
+                        </div>
+                    `;
+                    placesList.innerHTML += placeHTML;
+                });
+            }
+
+            document.getElementById('placesContainer').classList.add('active');
+        }
+
+        function enableChat() {
+            document.getElementById('chatDisabled').classList.remove('active');
+            document.getElementById('chatContainer').classList.add('active');
+            document.getElementById('clearBtn').style.display = 'block';
+        }
+
+        function sendMessage(message = null) {
+            const chatInput = document.getElementById('chatInput');
+            const msg = message || chatInput.value.trim();
+
+            if (!msg) {
+                showError('Please enter a message');
+                return;
+            }
+
+            if (!currentCity) {
+                showError('Please search for a city first');
+                return;
+            }
+
+            // Add user message to chat
+            addMessageToChat(msg, 'user');
+            chatInput.value = '';
+
+            // Show chat loading (flag spinner) while waiting for AI
+            showChatLoading(currentCountry);
+
+            // Send message to backend
+            fetch(`${apiBaseUrl}/chat`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: msg })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || 'Chat failed');
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                addMessageToChat(data.response, 'bot');
+            })
+            .catch(error => {
+                showError('Error: ' + error.message);
+            })
+            .finally(() => setTimeout(() => hideChatLoading(), 300));
+        }
+
+        function addMessageToChat(message, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const md = window.markdownit();
+            const htmlContent = md.render(message);
+
+            // For bot messages, show an avatar left of the bubble
+            if (sender === 'bot') {
+                const row = document.createElement('div');
+                row.className = 'message-row bot-row';
+
+                const avatar = document.createElement('div');
+                avatar.className = 'bot-avatar';
+                avatar.textContent = '🤖';
+
+                const content = document.createElement('div');
+                content.className = 'message bot-message';
+                content.innerHTML = htmlContent;
+
+                row.appendChild(avatar);
+                row.appendChild(content);
+                chatMessages.appendChild(row);
+            } else {
+                // user message: simple right-aligned bubble
+                const content = document.createElement('div');
+                content.className = 'message user-message';
+                content.innerHTML = htmlContent;
+                // Wrap to push to right
+                const row = document.createElement('div');
+                row.style.display = 'flex';
+                row.style.justifyContent = 'flex-end';
+                row.appendChild(content);
+                chatMessages.appendChild(row);
+            }
+
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Copy list-item text to clipboard when clicked and show toast
+        document.getElementById('chatMessages').addEventListener('click', function(e) {
+            const li = e.target.closest('li');
+            if (!li) return;
+            const text = li.innerText.trim();
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                showCopyToast('Copied: ' + text);
+            }).catch(() => {
+                showCopyToast('Copied');
+            });
+        });
+
+        function showCopyToast(msg) {
+            const t = document.getElementById('copyToast');
+            if (!t) return;
+            t.textContent = msg || 'Copied';
+            t.style.display = 'block';
+            t.style.opacity = '1';
+            setTimeout(() => {
+                t.style.transition = 'opacity 280ms ease';
+                t.style.opacity = '0';
+                setTimeout(() => { t.style.display = 'none'; t.style.transition = ''; }, 320);
+            }, 900);
+        }
+
+        function clearChat() {
+            document.getElementById('chatMessages').innerHTML = '';
+            fetch(`${apiBaseUrl}/clear`, {
+                method: 'POST'
+            })
+            .catch(error => console.error('Error clearing chat:', error));
+        }
+
+        // Allow Enter key to search
+        document.getElementById('cityInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchWeather();
+            }
+        });
+
+        // Set initial state
+        document.getElementById('chatDisabled').classList.add('active');
+    </script>
+</body>
+</html>
