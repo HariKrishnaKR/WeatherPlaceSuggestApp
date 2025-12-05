@@ -1,20 +1,27 @@
-# 🌍 TourAI Guide - Weather & Travel Assistant
+# 🌍 TourAI Guide - Elite AI-Powered Travel & Weather Assistant
 
-A smart travel companion that combines real-time weather data with AI-powered place recommendations and interactive tour guidance.
+An **elite-grade**, modern web app that combines **real-time weather data** with **AI-powered travel recommendations** and an **intelligent tour guide chatbot**. Features beautiful glassmorphic UI, animated loading indicators, and formatted AI responses.
 
-## Features
+## ✨ Features
 
-✨ **Real-time Weather Data** - Get current weather information from any city worldwide using wttr.in
+✨ **Real-time Weather Data** - Live weather from wttr.in API (no authentication needed)  
+🎯 **AI-Powered Recommendations** - Gemini 2.5 Flash suggests top 5 attractions  
+💬 **Interactive Tour Guide** - Chat with an AI guide about attractions, culture, safety, tips  
+🌡️ **Smart City Correction** - Auto-corrects city name typos via Wikipedia  
+🎨 **Modern Elite UI** - Glassmorphism design, premium travel background, smooth animations  
+🚩 **Animated Loading** - Rotating country flags while AI prepares responses  
+📋 **Click-to-Copy Tips** - Copy travel recommendations directly from chat  
+📱 **Fully Responsive** - Optimized for desktop, tablet, and mobile  
+🌐 **Internet-Ready** - Deployed on Render for worldwide access
 
-🎯 **AI-Powered Recommendations** - Gemini AI suggests 5-7 places to visit based on weather conditions
+## 🚀 Live Deployment
 
-💬 **Interactive Tour Guide** - Chat with an AI tour guide to learn about attractions, local culture, and travel tips
+The app is deployed on **Render** and accessible worldwide:
+- **URL:** `https://touraid-guide.onrender.com` (deployed after GitHub push)
 
-🤖 **Weather-Aware Suggestions** - Recommendations adapt based on current weather conditions
+**See [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md) for detailed deployment instructions.**
 
-📱 **Responsive Design** - Works seamlessly on desktop and mobile devices
-
-## Installation
+## 📦 Local Development
 
 ### Prerequisites
 - Python 3.8 or higher
